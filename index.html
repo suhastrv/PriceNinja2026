@@ -519,7 +519,51 @@
 
     .fade-in { animation: fadeUp 0.4s ease forwards; }
 
-    /* ── MOBILE ── */
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(6px);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border-hover);
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 440px;
+      width: 100%;
+    }
+    .modal h2 { font-family: var(--font-head); font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .modal p  { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; }
+    .modal input, .modal textarea, .modal select {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px; color: var(--text);
+      font-family: var(--font-body); font-size: 14px; outline: none;
+      margin-bottom: 12px; transition: border-color 0.2s;
+    }
+    .modal input:focus, .modal textarea:focus, .modal select:focus { border-color: var(--accent); }
+    .modal textarea { resize: vertical; min-height: 90px; }
+    .modal-btn {
+      width: 100%; background: var(--accent); color: #0d0f14;
+      border: none; border-radius: 12px; padding: 13px;
+      font-family: var(--font-head); font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: opacity 0.2s;
+    }
+    .modal-btn:hover { opacity: 0.88; }
+    .modal-close {
+      float: right; background: none; border: none; color: var(--text-muted);
+      font-size: 20px; cursor: pointer; margin-top: -4px;
+    }
+    .success-msg { text-align: center; padding: 16px 0; }
+    .success-msg .big { font-size: 40px; margin-bottom: 10px; }
+    .success-msg h3 { font-family: var(--font-head); font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .success-msg p  { font-size: 14px; color: var(--text-muted); }
+
     @media (max-width: 600px) {
       nav { padding: 14px 16px; }
       .hero { padding: 48px 16px 32px; }
@@ -538,7 +582,7 @@
     <div class="logo">Price<span>Ninja</span></div>
     <div style="display:flex;align-items:center;gap:12px;">
       <span class="nav-badge">MVP v1.0</span>
-      <span style="font-size:13px;color:var(--text-muted);">Mumbai, IN</span>
+      <button onclick="document.getElementById('feedbackModal').style.display='flex'" style="background:var(--surface2);color:var(--accent);border:1px solid rgba(0,229,160,0.25);border-radius:8px;padding:6px 14px;font-family:var(--font-body);font-size:12px;font-weight:500;cursor:pointer;">💬 Feedback</button>
     </div>
   </nav>
 
@@ -569,6 +613,11 @@
       <div class="chip" onclick="quickSearch('Surf Excel 1kg')">Surf Excel 1kg</div>
       <div class="chip" onclick="quickSearch('Aashirvaad Atta 5kg')">Aashirvaad Atta 5kg</div>
       <div class="chip" onclick="quickSearch('Dettol Soap')">Dettol Soap</div>
+      <div class="chip" onclick="quickSearch('Maggi Noodles')">Maggi Noodles</div>
+      <div class="chip" onclick="quickSearch('Parle G')">Parle-G</div>
+      <div class="chip" onclick="quickSearch('Colgate toothpaste')">Colgate</div>
+      <div class="chip" onclick="quickSearch('Amul Milk')">Amul Milk 1L</div>
+      <div class="chip" onclick="quickSearch('Fortune Oil')">Fortune Oil 1L</div>
     </div>
   </section>
 
@@ -660,70 +709,264 @@
     <br/><span style="color:var(--text-dim);font-size:11px;margin-top:4px;display:block;">Prices are indicative. Always verify on the platform before purchase.</span>
   </footer>
 
+  <!-- FEEDBACK MODAL -->
+  <div class="modal-overlay" id="feedbackModal" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal">
+      <div id="feedbackForm">
+        <button class="modal-close" onclick="document.getElementById('feedbackModal').style.display='none'">✕</button>
+        <h2>Your feedback 💬</h2>
+        <p>Help us build the product you actually want. Takes 30 seconds.</p>
+        <input type="text" id="fbName" placeholder="Your name (optional)" />
+        <input type="email" id="fbEmail" placeholder="Email — to notify you of updates (optional)" />
+        <select id="fbType">
+          <option value="">What kind of feedback?</option>
+          <option value="product">Request a new product to track</option>
+          <option value="platform">Request a new platform (Swiggy, JioMart…)</option>
+          <option value="bug">Something is broken</option>
+          <option value="idea">Feature idea</option>
+          <option value="other">Other</option>
+        </select>
+        <textarea id="fbText" placeholder="Tell us more… e.g. 'Please add Nescafé Gold 200g' or 'Add Swiggy Instamart'"></textarea>
+        <button class="modal-btn" onclick="submitFeedback()">Send feedback →</button>
+      </div>
+      <div id="feedbackSuccess" class="success-msg" style="display:none">
+        <div class="big">🙏</div>
+        <h3>Thank you!</h3>
+        <p>Your feedback has been recorded. We'll add your requested products soon and notify you if you left an email.</p>
+        <button class="modal-btn" style="margin-top:16px;" onclick="document.getElementById('feedbackModal').style.display='none';document.getElementById('feedbackForm').style.display='block';document.getElementById('feedbackSuccess').style.display='none'">Close</button>
+      </div>
+    </div>
+  </div>
+
+
   <script>
     // ─────────────────────────────────────────────
-    // PRODUCT DATABASE
-    // This is your "manual database" for the MVP.
-    // To add more products: copy one object block,
-    // change the name, prices, and delivery times.
+    // PRODUCT DATABASE — 20 popular Indian products
+    // To add more: copy any block, change the values
     // ─────────────────────────────────────────────
     const PRODUCTS = [
       {
         name: "Tata Salt 1kg",
         keywords: ["tata salt", "salt", "namak"],
         platforms: [
-          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:18, mrp:22, delivery:"10 min",  deliveryMins:10,  rating:4.5, offers:"18% off",   url:"https://blinkit.com" },
-          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:20, mrp:22, delivery:"8 min",   deliveryMins:8,   rating:4.3, offers:"No offer",  url:"https://zepto.in" },
-          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:21, mrp:22, delivery:"2–4 hrs", deliveryMins:150, rating:4.6, offers:"No offer",  url:"https://bigbasket.com" },
-          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:24, mrp:25, delivery:"Tomorrow",deliveryMins:1440,rating:4.4, offers:"No offer",  url:"https://amazon.in" },
-          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:22, mrp:25, delivery:"2 days",  deliveryMins:2880,rating:4.2, offers:"No offer",  url:"https://flipkart.com" }
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:18,  mrp:22,  delivery:"10 min",  deliveryMins:10,   rating:4.5, offers:"18% off",  url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:20,  mrp:22,  delivery:"8 min",   deliveryMins:8,    rating:4.3, offers:"No offer", url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:21,  mrp:22,  delivery:"2–4 hrs", deliveryMins:150,  rating:4.6, offers:"No offer", url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:24,  mrp:25,  delivery:"Tomorrow",deliveryMins:1440, rating:4.4, offers:"No offer", url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:22,  mrp:25,  delivery:"2 days",  deliveryMins:2880, rating:4.2, offers:"No offer", url:"https://flipkart.com" }
         ]
       },
       {
         name: "Amul Butter 500g",
         keywords: ["amul butter", "butter", "makhan"],
         platforms: [
-          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:264, mrp:290, delivery:"12 min",  deliveryMins:12,  rating:4.7, offers:"9% off",    url:"https://blinkit.com" },
-          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:270, mrp:290, delivery:"9 min",   deliveryMins:9,   rating:4.5, offers:"7% off",    url:"https://zepto.in" },
-          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:268, mrp:290, delivery:"2–4 hrs", deliveryMins:150, rating:4.8, offers:"8% off",    url:"https://bigbasket.com" },
-          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:285, mrp:290, delivery:"Tomorrow",deliveryMins:1440,rating:4.3, offers:"No offer",  url:"https://amazon.in" },
-          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:279, mrp:290, delivery:"2 days",  deliveryMins:2880,rating:4.1, offers:"4% off",    url:"https://flipkart.com" }
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:264, mrp:290, delivery:"12 min",  deliveryMins:12,   rating:4.7, offers:"9% off",   url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:270, mrp:290, delivery:"9 min",   deliveryMins:9,    rating:4.5, offers:"7% off",   url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:268, mrp:290, delivery:"2–4 hrs", deliveryMins:150,  rating:4.8, offers:"8% off",   url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:285, mrp:290, delivery:"Tomorrow",deliveryMins:1440, rating:4.3, offers:"No offer", url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:279, mrp:290, delivery:"2 days",  deliveryMins:2880, rating:4.1, offers:"4% off",   url:"https://flipkart.com" }
         ]
       },
       {
         name: "Surf Excel 1kg",
-        keywords: ["surf excel", "surf", "detergent", "washing powder"],
+        keywords: ["surf excel", "surf", "detergent", "washing powder", "laundry"],
         platforms: [
-          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:195, mrp:220, delivery:"11 min",  deliveryMins:11,  rating:4.6, offers:"11% off",   url:"https://blinkit.com" },
-          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:199, mrp:220, delivery:"10 min",  deliveryMins:10,  rating:4.4, offers:"9% off",    url:"https://zepto.in" },
-          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:205, mrp:220, delivery:"3 hrs",   deliveryMins:180, rating:4.5, offers:"7% off",    url:"https://bigbasket.com" },
-          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:189, mrp:220, delivery:"Today",   deliveryMins:480, rating:4.7, offers:"14% off",   url:"https://amazon.in" },
-          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:202, mrp:220, delivery:"Tomorrow",deliveryMins:1440,rating:4.3, offers:"8% off",    url:"https://flipkart.com" }
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:195, mrp:220, delivery:"11 min",  deliveryMins:11,   rating:4.6, offers:"11% off",  url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:199, mrp:220, delivery:"10 min",  deliveryMins:10,   rating:4.4, offers:"9% off",   url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:205, mrp:220, delivery:"3 hrs",   deliveryMins:180,  rating:4.5, offers:"7% off",   url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:189, mrp:220, delivery:"Today",   deliveryMins:480,  rating:4.7, offers:"14% off",  url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:202, mrp:220, delivery:"Tomorrow",deliveryMins:1440, rating:4.3, offers:"8% off",   url:"https://flipkart.com" }
         ]
       },
       {
         name: "Aashirvaad Atta 5kg",
-        keywords: ["aashirvaad", "atta", "flour", "wheat"],
+        keywords: ["aashirvaad", "atta", "flour", "wheat", "aashirvaad atta"],
         platforms: [
-          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:212, mrp:250, delivery:"15 min",  deliveryMins:15,  rating:4.6, offers:"15% off",   url:"https://blinkit.com" },
-          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:218, mrp:250, delivery:"12 min",  deliveryMins:12,  rating:4.4, offers:"13% off",   url:"https://zepto.in" },
-          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:225, mrp:250, delivery:"2–4 hrs", deliveryMins:150, rating:4.7, offers:"10% off",   url:"https://bigbasket.com" },
-          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:235, mrp:250, delivery:"Tomorrow",deliveryMins:1440,rating:4.5, offers:"6% off",    url:"https://amazon.in" },
-          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:229, mrp:250, delivery:"2 days",  deliveryMins:2880,rating:4.2, offers:"8% off",    url:"https://flipkart.com" }
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:212, mrp:250, delivery:"15 min",  deliveryMins:15,   rating:4.6, offers:"15% off",  url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:218, mrp:250, delivery:"12 min",  deliveryMins:12,   rating:4.4, offers:"13% off",  url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:225, mrp:250, delivery:"2–4 hrs", deliveryMins:150,  rating:4.7, offers:"10% off",  url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:235, mrp:250, delivery:"Tomorrow",deliveryMins:1440, rating:4.5, offers:"6% off",   url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:229, mrp:250, delivery:"2 days",  deliveryMins:2880, rating:4.2, offers:"8% off",   url:"https://flipkart.com" }
         ]
       },
       {
         name: "Dettol Soap 75g",
-        keywords: ["dettol", "soap", "sabun"],
+        keywords: ["dettol", "soap", "sabun", "dettol soap"],
         platforms: [
-          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:38, mrp:45, delivery:"10 min",  deliveryMins:10,  rating:4.5, offers:"16% off",   url:"https://blinkit.com" },
-          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:40, mrp:45, delivery:"9 min",   deliveryMins:9,   rating:4.3, offers:"11% off",   url:"https://zepto.in" },
-          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:39, mrp:45, delivery:"3 hrs",   deliveryMins:180, rating:4.6, offers:"13% off",   url:"https://bigbasket.com" },
-          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:42, mrp:45, delivery:"Tomorrow",deliveryMins:1440,rating:4.4, offers:"7% off",    url:"https://amazon.in" },
-          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:41, mrp:45, delivery:"2 days",  deliveryMins:2880,rating:4.1, offers:"9% off",    url:"https://flipkart.com" }
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:38,  mrp:45,  delivery:"10 min",  deliveryMins:10,   rating:4.5, offers:"16% off",  url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:40,  mrp:45,  delivery:"9 min",   deliveryMins:9,    rating:4.3, offers:"11% off",  url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:39,  mrp:45,  delivery:"3 hrs",   deliveryMins:180,  rating:4.6, offers:"13% off",  url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:42,  mrp:45,  delivery:"Tomorrow",deliveryMins:1440, rating:4.4, offers:"7% off",   url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:41,  mrp:45,  delivery:"2 days",  deliveryMins:2880, rating:4.1, offers:"9% off",   url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Maggi Noodles 12-pack",
+        keywords: ["maggi", "noodles", "instant noodles", "maggi noodles"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:138, mrp:156, delivery:"10 min",  deliveryMins:10,   rating:4.7, offers:"12% off",  url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:142, mrp:156, delivery:"9 min",   deliveryMins:9,    rating:4.5, offers:"9% off",   url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:140, mrp:156, delivery:"3 hrs",   deliveryMins:180,  rating:4.8, offers:"10% off",  url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:130, mrp:156, delivery:"Today",   deliveryMins:480,  rating:4.6, offers:"17% off",  url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:145, mrp:156, delivery:"Tomorrow",deliveryMins:1440, rating:4.3, offers:"7% off",   url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Parle-G Biscuits 800g",
+        keywords: ["parle g", "parle-g", "parleg", "biscuit", "glucose biscuit"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:55,  mrp:60,  delivery:"10 min",  deliveryMins:10,   rating:4.6, offers:"8% off",   url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:57,  mrp:60,  delivery:"9 min",   deliveryMins:9,    rating:4.4, offers:"5% off",   url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:56,  mrp:60,  delivery:"2–4 hrs", deliveryMins:150,  rating:4.7, offers:"7% off",   url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:52,  mrp:60,  delivery:"Tomorrow",deliveryMins:1440, rating:4.5, offers:"13% off",  url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:58,  mrp:60,  delivery:"2 days",  deliveryMins:2880, rating:4.2, offers:"3% off",   url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Colgate Toothpaste 300g",
+        keywords: ["colgate", "toothpaste", "toothpaste colgate", "dental", "paste"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:115, mrp:135, delivery:"11 min",  deliveryMins:11,   rating:4.5, offers:"15% off",  url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:118, mrp:135, delivery:"9 min",   deliveryMins:9,    rating:4.3, offers:"13% off",  url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:120, mrp:135, delivery:"3 hrs",   deliveryMins:180,  rating:4.6, offers:"11% off",  url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:109, mrp:135, delivery:"Today",   deliveryMins:480,  rating:4.7, offers:"19% off",  url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:122, mrp:135, delivery:"2 days",  deliveryMins:2880, rating:4.1, offers:"10% off",  url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Amul Milk 1L",
+        keywords: ["amul milk", "milk", "dudh", "amul"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:66,  mrp:68,  delivery:"10 min",  deliveryMins:10,   rating:4.8, offers:"3% off",   url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:66,  mrp:68,  delivery:"8 min",   deliveryMins:8,    rating:4.6, offers:"3% off",   url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:65,  mrp:68,  delivery:"2–4 hrs", deliveryMins:150,  rating:4.9, offers:"4% off",   url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:68,  mrp:68,  delivery:"Tomorrow",deliveryMins:1440, rating:4.4, offers:"No offer", url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:67,  mrp:68,  delivery:"2 days",  deliveryMins:2880, rating:4.2, offers:"No offer", url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Fortune Sunflower Oil 1L",
+        keywords: ["fortune oil", "sunflower oil", "cooking oil", "oil", "fortune"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:148, mrp:175, delivery:"12 min",  deliveryMins:12,   rating:4.5, offers:"15% off",  url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:152, mrp:175, delivery:"10 min",  deliveryMins:10,   rating:4.3, offers:"13% off",  url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:145, mrp:175, delivery:"3 hrs",   deliveryMins:180,  rating:4.7, offers:"17% off",  url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:158, mrp:175, delivery:"Tomorrow",deliveryMins:1440, rating:4.4, offers:"10% off",  url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:155, mrp:175, delivery:"2 days",  deliveryMins:2880, rating:4.2, offers:"11% off",  url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Tata Tea Gold 500g",
+        keywords: ["tata tea", "tea", "chai", "tata tea gold"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:228, mrp:265, delivery:"11 min",  deliveryMins:11,   rating:4.6, offers:"14% off",  url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:235, mrp:265, delivery:"9 min",   deliveryMins:9,    rating:4.4, offers:"11% off",  url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:230, mrp:265, delivery:"3 hrs",   deliveryMins:180,  rating:4.7, offers:"13% off",  url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:219, mrp:265, delivery:"Today",   deliveryMins:480,  rating:4.8, offers:"17% off",  url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:240, mrp:265, delivery:"Tomorrow",deliveryMins:1440, rating:4.3, offers:"9% off",   url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Nescafé Classic Coffee 100g",
+        keywords: ["nescafe", "coffee", "nescafe classic", "instant coffee"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:198, mrp:230, delivery:"10 min",  deliveryMins:10,   rating:4.6, offers:"14% off",  url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:205, mrp:230, delivery:"9 min",   deliveryMins:9,    rating:4.4, offers:"11% off",  url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:195, mrp:230, delivery:"3 hrs",   deliveryMins:180,  rating:4.7, offers:"15% off",  url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:185, mrp:230, delivery:"Today",   deliveryMins:480,  rating:4.8, offers:"20% off",  url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:210, mrp:230, delivery:"Tomorrow",deliveryMins:1440, rating:4.2, offers:"9% off",   url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Dove Shampoo 650ml",
+        keywords: ["dove shampoo", "shampoo", "dove", "hair"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:349, mrp:399, delivery:"11 min",  deliveryMins:11,   rating:4.6, offers:"13% off",  url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:359, mrp:399, delivery:"10 min",  deliveryMins:10,   rating:4.4, offers:"10% off",  url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:355, mrp:399, delivery:"3 hrs",   deliveryMins:180,  rating:4.7, offers:"11% off",  url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:329, mrp:399, delivery:"Today",   deliveryMins:480,  rating:4.8, offers:"18% off",  url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:339, mrp:399, delivery:"Tomorrow",deliveryMins:1440, rating:4.5, offers:"15% off",  url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Basmati Rice 5kg",
+        keywords: ["basmati", "rice", "chawal", "basmati rice"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:449, mrp:520, delivery:"15 min",  deliveryMins:15,   rating:4.5, offers:"14% off",  url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:460, mrp:520, delivery:"12 min",  deliveryMins:12,   rating:4.3, offers:"12% off",  url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:435, mrp:520, delivery:"3 hrs",   deliveryMins:180,  rating:4.8, offers:"16% off",  url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:420, mrp:520, delivery:"Tomorrow",deliveryMins:1440, rating:4.6, offers:"19% off",  url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:445, mrp:520, delivery:"2 days",  deliveryMins:2880, rating:4.2, offers:"14% off",  url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Harpic Toilet Cleaner 1L",
+        keywords: ["harpic", "toilet cleaner", "cleaner", "harpic cleaner"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:89,  mrp:115, delivery:"10 min",  deliveryMins:10,   rating:4.5, offers:"23% off",  url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:92,  mrp:115, delivery:"9 min",   deliveryMins:9,    rating:4.3, offers:"20% off",  url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:90,  mrp:115, delivery:"3 hrs",   deliveryMins:180,  rating:4.6, offers:"22% off",  url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:85,  mrp:115, delivery:"Today",   deliveryMins:480,  rating:4.7, offers:"26% off",  url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:95,  mrp:115, delivery:"Tomorrow",deliveryMins:1440, rating:4.2, offers:"17% off",  url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Britannia Bread 400g",
+        keywords: ["britannia bread", "bread", "double roti", "britannia"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:42,  mrp:48,  delivery:"10 min",  deliveryMins:10,   rating:4.5, offers:"13% off",  url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:44,  mrp:48,  delivery:"8 min",   deliveryMins:8,    rating:4.3, offers:"8% off",   url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:43,  mrp:48,  delivery:"2 hrs",   deliveryMins:120,  rating:4.7, offers:"10% off",  url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:46,  mrp:48,  delivery:"Tomorrow",deliveryMins:1440, rating:4.2, offers:"4% off",   url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:45,  mrp:48,  delivery:"2 days",  deliveryMins:2880, rating:4.1, offers:"6% off",   url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Lay's Chips 73g",
+        keywords: ["lays", "lay's", "chips", "snacks", "potato chips"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:20,  mrp:20,  delivery:"10 min",  deliveryMins:10,   rating:4.4, offers:"No offer", url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:20,  mrp:20,  delivery:"9 min",   deliveryMins:9,    rating:4.3, offers:"No offer", url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:18,  mrp:20,  delivery:"3 hrs",   deliveryMins:180,  rating:4.5, offers:"10% off",  url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:17,  mrp:20,  delivery:"Today",   deliveryMins:480,  rating:4.6, offers:"15% off",  url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:19,  mrp:20,  delivery:"2 days",  deliveryMins:2880, rating:4.1, offers:"5% off",   url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Vim Dishwash Bar 3-pack",
+        keywords: ["vim", "dishwash", "dish soap", "utensil cleaner", "vim bar"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:52,  mrp:63,  delivery:"10 min",  deliveryMins:10,   rating:4.5, offers:"17% off",  url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:55,  mrp:63,  delivery:"9 min",   deliveryMins:9,    rating:4.3, offers:"13% off",  url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:53,  mrp:63,  delivery:"3 hrs",   deliveryMins:180,  rating:4.6, offers:"16% off",  url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:49,  mrp:63,  delivery:"Today",   deliveryMins:480,  rating:4.7, offers:"22% off",  url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:57,  mrp:63,  delivery:"Tomorrow",deliveryMins:1440, rating:4.2, offers:"10% off",  url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Lifebuoy Handwash 250ml",
+        keywords: ["lifebuoy", "handwash", "hand wash", "liquid soap"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:72,  mrp:85,  delivery:"10 min",  deliveryMins:10,   rating:4.4, offers:"15% off",  url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:75,  mrp:85,  delivery:"9 min",   deliveryMins:9,    rating:4.2, offers:"12% off",  url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:74,  mrp:85,  delivery:"3 hrs",   deliveryMins:180,  rating:4.5, offers:"13% off",  url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:68,  mrp:85,  delivery:"Today",   deliveryMins:480,  rating:4.6, offers:"20% off",  url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:77,  mrp:85,  delivery:"Tomorrow",deliveryMins:1440, rating:4.1, offers:"9% off",   url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Amul Paneer 200g",
+        keywords: ["paneer", "amul paneer", "cottage cheese"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:89,  mrp:99,  delivery:"10 min",  deliveryMins:10,   rating:4.7, offers:"10% off",  url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:92,  mrp:99,  delivery:"8 min",   deliveryMins:8,    rating:4.5, offers:"7% off",   url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:88,  mrp:99,  delivery:"2 hrs",   deliveryMins:120,  rating:4.8, offers:"11% off",  url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:95,  mrp:99,  delivery:"Tomorrow",deliveryMins:1440, rating:4.3, offers:"4% off",   url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:94,  mrp:99,  delivery:"2 days",  deliveryMins:2880, rating:4.1, offers:"5% off",   url:"https://flipkart.com" }
         ]
       }
     ];
+
 
     // ─────────────────────────────────────────────
     // SCORING ENGINE
@@ -900,6 +1143,32 @@
         </div>
         <span class="score-val" style="color:${color};">${val}</span>
       </div>`;
+    }
+
+    // ─────────────────────────────────────────────
+    // FEEDBACK — saves to localStorage so you can
+    // review it. In the next step we'll connect
+    // this to a real Google Sheet.
+    // ─────────────────────────────────────────────
+    function submitFeedback() {
+      const name  = document.getElementById('fbName').value.trim();
+      const email = document.getElementById('fbEmail').value.trim();
+      const type  = document.getElementById('fbType').value;
+      const text  = document.getElementById('fbText').value.trim();
+
+      if (!text && !type) {
+        alert('Please tell us something — even one line helps!');
+        return;
+      }
+
+      // Save to localStorage (visible in browser DevTools → Application → Local Storage)
+      const existing = JSON.parse(localStorage.getItem('priceninja_feedback') || '[]');
+      existing.push({ name, email, type, text, date: new Date().toISOString() });
+      localStorage.setItem('priceninja_feedback', JSON.stringify(existing));
+
+      // Show thank you screen
+      document.getElementById('feedbackForm').style.display = 'none';
+      document.getElementById('feedbackSuccess').style.display = 'block';
     }
 
     // Allow pressing Enter to search
