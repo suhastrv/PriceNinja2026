@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PriceNinja — Compare prices across Blinkit, Zepto, BigBasket & more</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #161a22;
+      --surface2: #1e2330;
+      --border: rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.15);
+      --text: #f0f2f7;
+      --text-muted: #7a8099;
+      --text-dim: #454d66;
+      --accent: #00e5a0;
+      --accent-dim: rgba(0,229,160,0.12);
+      --accent-glow: rgba(0,229,160,0.25);
+      --warn: #ff9f43;
+      --info: #48dbfb;
+      --red: #ff6b6b;
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 32px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13,15,20,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: var(--font-head);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+
+    .logo span { color: var(--accent); }
+
+    .nav-badge {
+      font-size: 11px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid rgba(0,229,160,0.2);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 72px 24px 48px;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .hero-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid rgba(0,229,160,0.2);
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 22px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      font-family: var(--font-head);
+      font-size: clamp(32px, 6vw, 54px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .hero p {
+      color: var(--text-muted);
+      font-size: 16px;
+      max-width: 500px;
+      margin: 0 auto 36px;
+    }
+
+    /* ── SEARCH BOX ── */
+    .search-wrap {
+      max-width: 620px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1.5px solid var(--border-hover);
+      border-radius: 16px;
+      padding: 6px 6px 6px 20px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-box:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-glow);
+    }
+
+    .search-icon {
+      color: var(--text-muted);
+      font-size: 18px;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .search-box input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+    }
+
+    .search-box input::placeholder { color: var(--text-dim); }
+
+    .search-btn {
+      background: var(--accent);
+      color: #0d0f14;
+      border: none;
+      border-radius: 12px;
+      padding: 11px 24px;
+      font-family: var(--font-head);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      white-space: nowrap;
+    }
+
+    .search-btn:hover { opacity: 0.88; transform: scale(0.98); }
+
+    /* Quick search chips */
+    .quick-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+
+    .chip {
+      font-size: 12px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      background: var(--surface);
+    }
+
+    .chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    /* ── PLATFORM STRIP ── */
+    .platform-strip {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 24px 24px 0;
+    }
+
+    .platform-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 7px 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .platform-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* ── RESULTS SECTION ── */
+    #results-section { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; display: none; }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .results-title {
+      font-family: var(--font-head);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .results-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+    .sort-row { display: flex; gap: 8px; align-items: center; }
+
+    .sort-btn {
+      font-size: 12px;
+      padding: 5px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font-body);
+    }
+
+    .sort-btn.active, .sort-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    /* ── BEST DEAL BANNER ── */
+    .best-deal-banner {
+      background: linear-gradient(135deg, rgba(0,229,160,0.08) 0%, rgba(0,229,160,0.02) 100%);
+      border: 1px solid rgba(0,229,160,0.25);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .best-deal-left { display: flex; align-items: center; gap: 14px; }
+
+    .best-badge {
+      background: var(--accent);
+      color: #0d0f14;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--font-head);
+      padding: 4px 10px;
+      border-radius: 8px;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .best-info { }
+    .best-name { font-family: var(--font-head); font-size: 16px; font-weight: 700; }
+    .best-meta { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+    .best-price-block { text-align: right; }
+    .best-price { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--accent); }
+    .best-mrp { font-size: 12px; color: var(--text-muted); text-decoration: line-through; }
+
+    .buy-btn {
+      background: var(--accent);
+      color: #0d0f14;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 24px;
+      font-family: var(--font-head);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .buy-btn:hover { opacity: 0.85; transform: scale(0.97); }
+
+    /* ── COMPARISON CARDS GRID ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      transition: border-color 0.2s, transform 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+
+    .card.top-deal { border-color: rgba(0,229,160,0.3); }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .platform-name-row { display: flex; align-items: center; gap: 8px; }
+
+    .platform-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      font-family: var(--font-head);
+    }
+
+    .platform-title { font-weight: 500; font-size: 14px; }
+
+    .score-pill {
+      font-size: 12px;
+      font-weight: 700;
+      font-family: var(--font-head);
+      padding: 3px 10px;
+      border-radius: 8px;
+    }
+
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .price { font-family: var(--font-head); font-size: 26px; font-weight: 800; }
+    .mrp { font-size: 13px; color: var(--text-muted); text-decoration: line-through; }
+    .discount { font-size: 12px; color: var(--accent); font-weight: 500; }
+
+    .card-meta { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+
+    .meta-row { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-muted); }
+
+    .meta-icon { font-size: 14px; }
+
+    .card-btn {
+      width: 100%;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .card-btn:hover { background: var(--accent); color: #0d0f14; border-color: var(--accent); }
+
+    .card-btn.primary {
+      background: rgba(0,229,160,0.12);
+      color: var(--accent);
+      border-color: rgba(0,229,160,0.25);
+    }
+
+    .card-btn.primary:hover { background: var(--accent); color: #0d0f14; }
+
+    /* Score bars */
+    .score-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .score-title { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 500; }
+
+    .score-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+    .score-label { font-size: 12px; color: var(--text-muted); width: 56px; flex-shrink: 0; }
+    .score-track { flex: 1; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+    .score-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+    .score-val { font-size: 11px; font-weight: 700; width: 28px; text-align: right; flex-shrink: 0; }
+
+    /* ── AI SUGGESTION BOX ── */
+    .ai-box {
+      background: var(--surface);
+      border: 1px solid rgba(72,219,251,0.2);
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .ai-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(72,219,251,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      color: var(--info);
+    }
+
+    .ai-label { font-size: 11px; color: var(--info); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .ai-text { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 80px 24px;
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    .empty-icon { font-size: 48px; margin-bottom: 16px; color: var(--text-dim); }
+    .empty-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .empty-text { font-size: 14px; color: var(--text-muted); }
+
+    /* ── STATS STRIP ── */
+    .stats-strip {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      padding: 32px 24px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .stat { text-align: center; }
+    .stat-num { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--accent); }
+    .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── LOADING ── */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 48px;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--surface2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text { color: var(--text-muted); font-size: 14px; }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* ── FADE IN ANIMATION ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in { animation: fadeUp 0.4s ease forwards; }
+
+    /* ── MOBILE ── */
+    @media (max-width: 600px) {
+      nav { padding: 14px 16px; }
+      .hero { padding: 48px 16px 32px; }
+      .platform-strip { padding: 16px 16px 0; }
+      #results-section { padding: 28px 16px 60px; }
+      .best-deal-banner { flex-direction: column; align-items: flex-start; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .stats-strip { gap: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo">Price<span>Ninja</span></div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="nav-badge">MVP v1.0</span>
+      <span style="font-size:13px;color:var(--text-muted);">Mumbai, IN</span>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-label">
+      ⚡ India's first smart price comparator
+    </div>
+    <h1>Stop overpaying.<br/>Find the <em>best deal</em><br/>instantly.</h1>
+    <p>Compare prices, delivery times &amp; offers across Blinkit, Zepto, BigBasket, Amazon &amp; Flipkart — in one search.</p>
+
+    <div class="search-wrap">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search any product… Tata Salt, Amul Butter, OnePlus"
+          autocomplete="off"
+        />
+        <button class="search-btn" onclick="doSearch()">Compare →</button>
+      </div>
+    </div>
+
+    <div class="quick-chips">
+      <div class="chip" onclick="quickSearch('Tata Salt 1kg')">Tata Salt 1kg</div>
+      <div class="chip" onclick="quickSearch('Amul Butter 500g')">Amul Butter 500g</div>
+      <div class="chip" onclick="quickSearch('Surf Excel 1kg')">Surf Excel 1kg</div>
+      <div class="chip" onclick="quickSearch('Aashirvaad Atta 5kg')">Aashirvaad Atta 5kg</div>
+      <div class="chip" onclick="quickSearch('Dettol Soap')">Dettol Soap</div>
+    </div>
+  </section>
+
+  <!-- PLATFORM STRIP -->
+  <div class="platform-strip">
+    <div class="platform-pill"><span class="platform-dot" style="background:#00c853;"></span>Blinkit</div>
+    <div class="platform-pill"><span class="platform-dot" style="background:#9c27b0;"></span>Zepto</div>
+    <div class="platform-pill"><span class="platform-dot" style="background:#e53935;"></span>BigBasket</div>
+    <div class="platform-pill"><span class="platform-dot" style="background:#ff9800;"></span>Amazon</div>
+    <div class="platform-pill"><span class="platform-dot" style="background:#1565c0;"></span>Flipkart</div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Checking prices across 5 platforms…</div>
+  </div>
+
+  <!-- RESULTS SECTION -->
+  <section id="results-section">
+
+    <div class="results-header">
+      <div>
+        <div class="results-title" id="resultsTitle">Results for "Tata Salt 1kg"</div>
+        <div class="results-subtitle" id="resultsSubtitle">5 platforms compared · Updated just now</div>
+      </div>
+      <div class="sort-row">
+        <span style="font-size:12px;color:var(--text-muted);">Sort:</span>
+        <button class="sort-btn active" onclick="sortCards('price',this)">Lowest price</button>
+        <button class="sort-btn" onclick="sortCards('delivery',this)">Fastest delivery</button>
+        <button class="sort-btn" onclick="sortCards('score',this)">Best score</button>
+      </div>
+    </div>
+
+    <!-- AI Suggestion -->
+    <div class="ai-box" id="aiBox">
+      <div class="ai-icon">🤖</div>
+      <div>
+        <div class="ai-label">AI recommendation</div>
+        <div class="ai-text" id="aiText">Loading suggestion…</div>
+      </div>
+    </div>
+
+    <!-- Best Deal Banner -->
+    <div class="best-deal-banner" id="bestDealBanner">
+      <div class="best-deal-left">
+        <span class="best-badge">🏆 Best deal</span>
+        <div class="best-info">
+          <div class="best-name" id="bestName">Blinkit</div>
+          <div class="best-meta" id="bestMeta">10 min delivery · 18% off · 1kg</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+        <div class="best-price-block">
+          <div class="best-price" id="bestPrice">₹18</div>
+          <div class="best-mrp" id="bestMrp">MRP ₹22</div>
+        </div>
+        <button class="buy-btn" id="bestBtn">Buy on Blinkit →</button>
+      </div>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="cards-grid" id="cardsGrid"></div>
+
+  </section>
+
+  <!-- STATS (shown on homepage) -->
+  <div class="stats-strip" id="statsStrip">
+    <div class="stat">
+      <div class="stat-num">5+</div>
+      <div class="stat-label">Platforms compared</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">500+</div>
+      <div class="stat-label">Products tracked</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">₹94</div>
+      <div class="stat-label">Avg. savings per cart</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">10s</div>
+      <div class="stat-label">Time to best deal</div>
+    </div>
+  </div>
+
+  <footer>
+    Built with ❤️ for Indian shoppers · <a href="#">About</a> · <a href="#">Feedback</a>
+    <br/><span style="color:var(--text-dim);font-size:11px;margin-top:4px;display:block;">Prices are indicative. Always verify on the platform before purchase.</span>
+  </footer>
+
+  <script>
+    // ─────────────────────────────────────────────
+    // PRODUCT DATABASE
+    // This is your "manual database" for the MVP.
+    // To add more products: copy one object block,
+    // change the name, prices, and delivery times.
+    // ─────────────────────────────────────────────
+    const PRODUCTS = [
+      {
+        name: "Tata Salt 1kg",
+        keywords: ["tata salt", "salt", "namak"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:18, mrp:22, delivery:"10 min",  deliveryMins:10,  rating:4.5, offers:"18% off",   url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:20, mrp:22, delivery:"8 min",   deliveryMins:8,   rating:4.3, offers:"No offer",  url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:21, mrp:22, delivery:"2–4 hrs", deliveryMins:150, rating:4.6, offers:"No offer",  url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:24, mrp:25, delivery:"Tomorrow",deliveryMins:1440,rating:4.4, offers:"No offer",  url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:22, mrp:25, delivery:"2 days",  deliveryMins:2880,rating:4.2, offers:"No offer",  url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Amul Butter 500g",
+        keywords: ["amul butter", "butter", "makhan"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:264, mrp:290, delivery:"12 min",  deliveryMins:12,  rating:4.7, offers:"9% off",    url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:270, mrp:290, delivery:"9 min",   deliveryMins:9,   rating:4.5, offers:"7% off",    url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:268, mrp:290, delivery:"2–4 hrs", deliveryMins:150, rating:4.8, offers:"8% off",    url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:285, mrp:290, delivery:"Tomorrow",deliveryMins:1440,rating:4.3, offers:"No offer",  url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:279, mrp:290, delivery:"2 days",  deliveryMins:2880,rating:4.1, offers:"4% off",    url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Surf Excel 1kg",
+        keywords: ["surf excel", "surf", "detergent", "washing powder"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:195, mrp:220, delivery:"11 min",  deliveryMins:11,  rating:4.6, offers:"11% off",   url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:199, mrp:220, delivery:"10 min",  deliveryMins:10,  rating:4.4, offers:"9% off",    url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:205, mrp:220, delivery:"3 hrs",   deliveryMins:180, rating:4.5, offers:"7% off",    url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:189, mrp:220, delivery:"Today",   deliveryMins:480, rating:4.7, offers:"14% off",   url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:202, mrp:220, delivery:"Tomorrow",deliveryMins:1440,rating:4.3, offers:"8% off",    url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Aashirvaad Atta 5kg",
+        keywords: ["aashirvaad", "atta", "flour", "wheat"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:212, mrp:250, delivery:"15 min",  deliveryMins:15,  rating:4.6, offers:"15% off",   url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:218, mrp:250, delivery:"12 min",  deliveryMins:12,  rating:4.4, offers:"13% off",   url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:225, mrp:250, delivery:"2–4 hrs", deliveryMins:150, rating:4.7, offers:"10% off",   url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:235, mrp:250, delivery:"Tomorrow",deliveryMins:1440,rating:4.5, offers:"6% off",    url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:229, mrp:250, delivery:"2 days",  deliveryMins:2880,rating:4.2, offers:"8% off",    url:"https://flipkart.com" }
+        ]
+      },
+      {
+        name: "Dettol Soap 75g",
+        keywords: ["dettol", "soap", "sabun"],
+        platforms: [
+          { name:"Blinkit",   short:"BL", color:"#00c853", bg:"#00210d", price:38, mrp:45, delivery:"10 min",  deliveryMins:10,  rating:4.5, offers:"16% off",   url:"https://blinkit.com" },
+          { name:"Zepto",     short:"ZP", color:"#9c27b0", bg:"#1a0022", price:40, mrp:45, delivery:"9 min",   deliveryMins:9,   rating:4.3, offers:"11% off",   url:"https://zepto.in" },
+          { name:"BigBasket", short:"BB", color:"#e53935", bg:"#1a0000", price:39, mrp:45, delivery:"3 hrs",   deliveryMins:180, rating:4.6, offers:"13% off",   url:"https://bigbasket.com" },
+          { name:"Amazon",    short:"AM", color:"#ff9800", bg:"#1a0e00", price:42, mrp:45, delivery:"Tomorrow",deliveryMins:1440,rating:4.4, offers:"7% off",    url:"https://amazon.in" },
+          { name:"Flipkart",  short:"FK", color:"#1565c0", bg:"#000e1a", price:41, mrp:45, delivery:"2 days",  deliveryMins:2880,rating:4.1, offers:"9% off",    url:"https://flipkart.com" }
+        ]
+      }
+    ];
+
+    // ─────────────────────────────────────────────
+    // SCORING ENGINE
+    // Calculates a score out of 10 for each platform
+    // based on price, delivery speed, discount & rating
+    // ─────────────────────────────────────────────
+    function calcScores(platforms) {
+      const minPrice    = Math.min(...platforms.map(p => p.price));
+      const minDelivery = Math.min(...platforms.map(p => p.deliveryMins));
+      const maxRating   = Math.max(...platforms.map(p => p.rating));
+
+      return platforms.map(p => {
+        const priceScore    = (minPrice / p.price) * 10;
+        const delivScore    = (minDelivery / p.deliveryMins) * 10;
+        const discountScore = ((p.mrp - p.price) / p.mrp) * 10;
+        const ratingScore   = (p.rating / maxRating) * 10;
+        const total = (priceScore*0.4 + delivScore*0.25 + discountScore*0.2 + ratingScore*0.15);
+        return { ...p, score: Math.round(total * 10) / 10,
+          priceScore: Math.round(priceScore*10)/10,
+          delivScore: Math.round(Math.min(delivScore,10)*10)/10,
+          discountScore: Math.round(Math.min(discountScore,10)*10)/10,
+          ratingScore: Math.round(ratingScore*10)/10
+        };
+      });
+    }
+
+    // ─────────────────────────────────────────────
+    // SEARCH LOGIC
+    // ─────────────────────────────────────────────
+    let currentData = [];
+    let currentSort = 'price';
+
+    function quickSearch(term) {
+      document.getElementById('searchInput').value = term;
+      doSearch();
+    }
+
+    function doSearch() {
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      if (!query) return;
+
+      const loading = document.getElementById('loading');
+      const resultsSection = document.getElementById('results-section');
+      const statsStrip = document.getElementById('statsStrip');
+
+      loading.style.display = 'block';
+      resultsSection.style.display = 'none';
+      statsStrip.style.display = 'none';
+
+      // Simulate a 1.2 second "loading" delay for realism
+      setTimeout(() => {
+        loading.style.display = 'none';
+        const match = PRODUCTS.find(p =>
+          p.keywords.some(k => query.includes(k) || k.includes(query)) ||
+          p.name.toLowerCase().includes(query)
+        );
+
+        if (match) {
+          showResults(match);
+        } else {
+          showNoResults(query);
+        }
+        resultsSection.style.display = 'block';
+      }, 1200);
+    }
+
+    function showNoResults(query) {
+      document.getElementById('resultsTitle').textContent = `No results for "${query}"`;
+      document.getElementById('resultsSubtitle').textContent = 'Try: Tata Salt, Amul Butter, Surf Excel, Aashirvaad Atta, Dettol Soap';
+      document.getElementById('aiBox').style.display = 'none';
+      document.getElementById('bestDealBanner').style.display = 'none';
+      document.getElementById('cardsGrid').innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-icon">🔍</div>
+          <div class="empty-title">Product not in our database yet</div>
+          <div class="empty-text">We're adding more products daily. Try searching for Tata Salt, Amul Butter, or Surf Excel for now.</div>
+        </div>`;
+    }
+
+    function showResults(product) {
+      currentData = calcScores(product.platforms);
+      document.getElementById('resultsTitle').textContent = `Results for "${product.name}"`;
+      document.getElementById('resultsSubtitle').textContent = `${currentData.length} platforms compared · Updated just now`;
+      document.getElementById('aiBox').style.display = 'flex';
+
+      renderSorted(currentSort);
+    }
+
+    function sortCards(type, btn) {
+      currentSort = type;
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderSorted(type);
+    }
+
+    function renderSorted(type) {
+      const sorted = [...currentData].sort((a, b) => {
+        if (type === 'price')    return a.price - b.price;
+        if (type === 'delivery') return a.deliveryMins - b.deliveryMins;
+        if (type === 'score')    return b.score - a.score;
+        return 0;
+      });
+
+      const best = [...currentData].sort((a,b) => b.score - a.score)[0];
+
+      // Update best deal banner
+      document.getElementById('bestName').textContent = best.name;
+      document.getElementById('bestMeta').textContent = `${best.delivery} delivery · ${best.offers} · Score ${best.score}/10`;
+      document.getElementById('bestPrice').textContent = `₹${best.price}`;
+      document.getElementById('bestMrp').textContent = `MRP ₹${best.mrp}`;
+      document.getElementById('bestBtn').textContent = `Buy on ${best.name} →`;
+      document.getElementById('bestBtn').onclick = () => window.open(best.url, '_blank');
+      document.getElementById('bestDealBanner').style.display = 'flex';
+
+      // AI text
+      const cheapest = [...currentData].sort((a,b) => a.price - b.price)[0];
+      const fastest  = [...currentData].sort((a,b) => a.deliveryMins - b.deliveryMins)[0];
+      document.getElementById('aiText').textContent =
+        `${best.name} offers the best overall value — ${best.offers}, delivered in ${best.delivery}, scoring ${best.score}/10. ` +
+        (cheapest.name !== best.name ? `If price is your only concern, ${cheapest.name} is cheapest at ₹${cheapest.price}. ` : '') +
+        (fastest.name  !== best.name ? `Need it fastest? ${fastest.name} delivers in ${fastest.delivery}.` : '');
+
+      // Render cards
+      const grid = document.getElementById('cardsGrid');
+      grid.innerHTML = '';
+      sorted.forEach((p, i) => {
+        const isTop = i === 0;
+        const discPct = Math.round(((p.mrp - p.price) / p.mrp) * 100);
+        const scoreColor = p.score >= 8 ? '#00e5a0' : p.score >= 6 ? '#ff9f43' : '#ff6b6b';
+
+        const card = document.createElement('div');
+        card.className = `card fade-in${isTop ? ' top-deal' : ''}`;
+        card.style.animationDelay = `${i * 0.06}s`;
+        card.style.opacity = '0';
+
+        card.innerHTML = `
+          <div class="card-top">
+            <div class="platform-name-row">
+              <div class="platform-logo" style="background:${p.bg};color:${p.color};">${p.short}</div>
+              <span class="platform-title">${p.name}</span>
+            </div>
+            <span class="score-pill" style="background:${scoreColor}22;color:${scoreColor};">${p.score}/10</span>
+          </div>
+          <div class="price-row">
+            <span class="price" style="color:${p.color};">₹${p.price}</span>
+            <span class="mrp">₹${p.mrp}</span>
+            ${discPct > 0 ? `<span class="discount">${discPct}% off</span>` : ''}
+          </div>
+          <div class="card-meta">
+            <div class="meta-row"><span class="meta-icon">🕐</span>${p.delivery} delivery</div>
+            <div class="meta-row"><span class="meta-icon">⭐</span>${p.rating} rating · ${p.offers}</div>
+          </div>
+          <div class="score-section">
+            <div class="score-title">Score breakdown</div>
+            ${scoreBar('Price', p.priceScore, '#00e5a0')}
+            ${scoreBar('Delivery', p.delivScore, '#48dbfb')}
+            ${scoreBar('Discount', p.discountScore, '#ff9f43')}
+            ${scoreBar('Rating', p.ratingScore, '#a29bfe')}
+          </div>
+          <button class="card-btn ${isTop ? 'primary' : ''}" style="margin-top:14px;" onclick="window.open('${p.url}','_blank')">
+            ${isTop ? '🏆 ' : ''}Buy on ${p.name} →
+          </button>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function scoreBar(label, val, color) {
+      const pct = Math.min(Math.round(val * 10), 100);
+      return `<div class="score-bar-row">
+        <span class="score-label">${label}</span>
+        <div class="score-track">
+          <div class="score-fill" style="width:${pct}%;background:${color};"></div>
+        </div>
+        <span class="score-val" style="color:${color};">${val}</span>
+      </div>`;
+    }
+
+    // Allow pressing Enter to search
+    document.getElementById('searchInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doSearch();
+    });
+  </script>
+</body>
+</html>
